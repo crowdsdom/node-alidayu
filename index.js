@@ -19,7 +19,7 @@ var valid_gws = [
 // 时间戳，格式为yyyy-MM-dd HH:mm:ss，时区为GMT+8
 function timestamp() {
   var now = new Date();
-  var diff = now.getTimezoneOffset();// + 480;
+  var diff = now.getTimezoneOffset() + 480;
   var now = new Date(now.getTime() + diff * 60000);
 
   var year = now.getFullYear();
@@ -54,7 +54,7 @@ var AliDayu = function(options) {
   this.app_key = options.app_key;
   this.app_secret = options.app_secret;
 
-  this.gw = options.gw || 'http://gw.api.taobao.com/router/rest';
+  this.gw = options.gw || 'https://eco.taobao.com/router/rest';
 
   this.options = _.merge(_.clone(defaults), _.omit(options, ['app_secret', 'gw']));
 
@@ -99,11 +99,14 @@ function fullEncodeURIComponent(str) {
 AliDayu.prototype._request = function(params, callback) {
   for (var key in params) {
     if (typeof params[key] === 'object') {
-      params[key] = fullEncodeURIComponent(JSON.stringify(params[key]));
+      params[key] = JSON.stringify(params[key]);
     } else {
-      params[key] = fullEncodeURIComponent(params[key]);
+      params[key] = params[key];
     }
   }
+
+  params.timestamp = timestamp();
+  params.sign = this._sign(params);
 
   var options = {
     method: 'POST',
@@ -116,10 +119,8 @@ AliDayu.prototype._request = function(params, callback) {
 };
 
 AliDayu.prototype.sms = function(options, callback) {
-  var method = 'alibaba.aliqin.fc.voice.num.singlecall';
+  var method = 'alibaba.aliqin.fc.sms.num.send';
   var params = _.merge({}, this.options, {method: method}, options);
-  params.timestamp = timestamp();
-  params.sign = this._sign(params);
 
   this._request(params, callback);
 };
